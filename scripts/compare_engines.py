@@ -1,4 +1,4 @@
-"""Compares the findings of the Oracle run with those of the DuckDB run.
+r"""Compares the findings of the Oracle run with those of the DuckDB run.
 
 Both runs execute the same SQL from db/, so they should report the same
 findings. A finding is identified by its check, country, pollutant, sector,
@@ -6,7 +6,7 @@ year and, for checks that can report one cell more than once (QC06), its
 detail text. The script reports findings present in only one run, and the
 largest relative difference in the numbers attached to matched findings.
 
-Run:  uv run scripts/compare_engines.py \\
+Run:  uv run scripts/compare_engines.py \
           data/results/findings_oracle.csv data/results/findings_duckdb.csv
 Exits with 1 if any finding is in only one of the files. Small differences
 in the numbers are expected: Oracle computes in decimal, DuckDB in binary

@@ -3,13 +3,12 @@
 **How these numbers were produced.** The checks were run twice on the same
 file, by two different database engines executing the same SQL: Oracle
 Database Free (`scripts/run_on_data.sh`) and DuckDB
-(`scripts/crosscheck_duckdb.py`). Both reported the same findings, cell for
-cell, with no finding found by only one engine (`scripts/compare_engines.py`).
-The numbers attached to the findings agree to the nine significant digits the
-Oracle run exported; the QC07 z-scores agree exactly. That comparison was made
-before QC02 was restricted to source categories; applying the restriction to
-the Oracle run's QC02 findings selects exactly the 84,949 that DuckDB reports
-under the new rule. The figures below total 459,177 findings.
+(`scripts/crosscheck_duckdb.py`). Both reported the same 459,177 findings,
+cell for cell, with no finding found by only one engine
+(`scripts/compare_engines.py`). The numbers attached to them agree to within
+1.4 × 10⁻¹³ relative, the size of floating-point rounding (Oracle computes in
+decimal, DuckDB in binary floating point), and the QC07 z-scores agree
+exactly. The figures below are computed from these findings.
 
 ## Question
 
