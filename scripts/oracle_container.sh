@@ -41,9 +41,12 @@ sqlplus_in_container() {
     docker exec -w "$2" "$CONTAINER" sqlplus -s -L "$1" "@$3"
 }
 
-install_project() {
+grant_app_user() {
     log "Granting privileges to $APP_USER"
     sqlplus_in_container "$SYS_CONNECT" /work scripts/grant_app_user.sql
+}
+
+install_project() {
     log "Installing the project"
     sqlplus_in_container "$APP_CONNECT" /work/db install.sql
 }

@@ -99,7 +99,8 @@ expected results are also reproduced independently in
 - [x] Loader mapping for the EEA file; reference data generated from the EEA's code lists
 - [x] Run on the 2026 dataset (DuckDB) and findings written up
 - [x] QC05 tolerance calibrated on the data; QC06 tolerance checked against it
-- [ ] Test suite run on Oracle (CI)
+- [x] Test suite run on Oracle Database Free: 43/43 passed on the previous version (before the EEA mapping)
+- [ ] Rerun on Oracle for the current 46 tests, and in CI
 - [ ] Run on the 2026 dataset on Oracle, and compare with the DuckDB results
 - [ ] Recalculation check between dataset editions
 

@@ -27,7 +27,16 @@ fi
 start_oracle
 
 log "Installing utPLSQL"
-sqlplus_in_container "$SYS_CONNECT" "/work/$CACHE/utPLSQL/source" install_headless.sql
+# The installer writes temporary files (params.sql.tmp, install.log) next to
+# its scripts, and /work is read-only, so run it from a writable copy. If it
+# cannot write them it silently skips the public grants and synonyms.
+docker exec "$CONTAINER" cp -r "/work/$CACHE/utPLSQL/source" /tmp/utplsql
+sqlplus_in_container "$SYS_CONNECT" /tmp/utplsql install_headless.sql
+
+grant_app_user
+
+log "Checking $APP_USER can call utPLSQL"
+sqlplus_in_container "$APP_CONNECT" /work scripts/check_utplsql.sql
 
 install_project
 

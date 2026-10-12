@@ -20,6 +20,7 @@ chmod 777 data/results
 
 start_oracle -v "$PWD/data/raw":/data:ro -v "$PWD/data/results":/results
 
+grant_app_user
 install_project
 
 log "Pointing the database at the data folder"
