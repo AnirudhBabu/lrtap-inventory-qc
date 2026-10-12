@@ -194,7 +194,23 @@ select fine.country_code,
 -- than z standard deviations from the mean residual, provided the value is
 -- more than materiality_share of that year's national total.
 -- observed is the reported value, expected is the trend value.
+--
+-- The fit is its own view, qc07_trend, so that anything showing a series
+-- (the REST API in service/) draws the same line the check used.
 ------------------------------------------------------------------------------
+create or replace view qc07_trend as
+select e.country_code,
+       e.pollutant_code,
+       e.sector_code,
+       count(*)                               as n_years,
+       regr_intercept(log(10, e.value), e.year) as intercept,
+       regr_slope(log(10, e.value), e.year)     as slope
+  from emission e
+  join ref_sector s on s.sector_code = e.sector_code
+ where s.role in ('SECTOR', 'TOTAL')
+   and e.value > 0
+ group by e.country_code, e.pollutant_code, e.sector_code;
+
 create or replace view qc07_time_series as
 with
 param as (
@@ -212,25 +228,16 @@ national_total as (
      where s.role = 'TOTAL'
        and e.value is not null
 ),
-series as (
-    select e.country_code, e.pollutant_code, e.sector_code, e.year, e.value,
-           log(10, e.value) as log_value
-      from emission e
-      join ref_sector s on s.sector_code = e.sector_code
-     where s.role in ('SECTOR', 'TOTAL')
-       and e.value > 0
-),
-fitted as (
-    select s.*,
-           count(*)                         over (partition by country_code, pollutant_code, sector_code) as n_years,
-           regr_intercept(log_value, year)  over (partition by country_code, pollutant_code, sector_code) as intercept,
-           regr_slope(log_value, year)      over (partition by country_code, pollutant_code, sector_code) as slope
-      from series s
-),
 residual as (
-    select f.*,
-           f.log_value - (f.intercept + f.slope * f.year) as resid
-      from fitted f
+    select e.country_code, e.pollutant_code, e.sector_code, e.year, e.value,
+           t.n_years, t.intercept, t.slope,
+           log(10, e.value) - (t.intercept + t.slope * e.year) as resid
+      from emission e
+      join qc07_trend t
+        on t.country_code   = e.country_code
+       and t.pollutant_code = e.pollutant_code
+       and t.sector_code    = e.sector_code
+     where e.value > 0
 ),
 scored as (
     select r.*,
