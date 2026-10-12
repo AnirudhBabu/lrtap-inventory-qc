@@ -277,7 +277,7 @@ directly.
 
 **Not reproduced.** CEIP also flags whole series whose standard deviation exceeds
 20 % of the series mean (CEIP-M2025 p. 17). That is a property of the series, not
-of a single year, and is left for a later version.
+of a single year, and this project does not implement it.
 
 **Parameters.**
 
@@ -288,10 +288,12 @@ of a single year, and is left for a later version.
 | `min_years` | 3 | CEIP-M2025 p. 17 |
 | `min_abs_log_resid` | 0.041393 (= log10 1.1) | This project; see above |
 
-## Planned, not yet implemented
+## Not covered
+
+Two of CEIP's stage 2 review areas are outside this project:
 
 - **Recalculations** between two editions of the dataset, flagged at ±10 %
-  (CEIP-M2025 p. 15; EB2018 para. 11(d)). Needs the previous edition loaded
-  alongside the current one.
-- **Comparison with an independent inventory** such as EDGAR at national-total
-  level (EB2018 para. 11(b)).
+  (CEIP-M2025 p. 15; EB2018 para. 11(d)). This needs two editions loaded side
+  by side.
+- **Comparison with an independent inventory**, such as EDGAR, at
+  national-total level (EB2018 para. 11(b)).

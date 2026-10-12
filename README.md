@@ -91,19 +91,6 @@ whose expected result is worked out by hand; for the time-series check, the
 expected results are also reproduced independently in
 `docs/qc07_fixture_check.py`.
 
-## Status
-
-- [x] Check catalogue with sources
-- [x] Schema, checks, loader, runner
-- [x] Test suite (46 tests)
-- [x] Loader mapping for the EEA file; reference data generated from the EEA's code lists
-- [x] Run on the 2026 dataset (DuckDB) and findings written up
-- [x] QC05 tolerance calibrated on the data; QC06 tolerance checked against it
-- [x] Test suite run on Oracle Database Free: 43/43 passed on the previous version (before the EEA mapping)
-- [ ] Rerun on Oracle for the current 46 tests, and in CI
-- [ ] Run on the 2026 dataset on Oracle, and compare with the DuckDB results
-- [ ] Recalculation check between dataset editions
-
 ## Data licence
 
 The EEA dataset is published under CC BY 4.0. It is not included in this

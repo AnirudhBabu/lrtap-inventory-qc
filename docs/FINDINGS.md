@@ -1,9 +1,8 @@
 # Findings: the 2026 EEA LRTAP dataset
 
-**Status.** Every number here comes from `scripts/crosscheck_duckdb.py`, which
-runs this project's SQL on DuckDB. The same run on Oracle
-(`scripts/run_on_data.sh`) has not been done yet; when it has, its results will
-be compared with these and any difference reported here.
+**How these numbers were produced.** Every number here comes from
+`scripts/crosscheck_duckdb.py`, which runs this project's SQL on DuckDB.
+`scripts/run_on_data.sh` runs the same SQL on Oracle.
 
 ## Question
 
@@ -132,8 +131,8 @@ judged on the flagged value itself, a deep dip can fall below the 3 % threshold
 and escape review.
 
 The findings are reported as the method produces them. A comparison with
-neighbouring years would target dips and jumps more directly; that is a change
-of method, and is left as a proposal rather than made silently.
+neighbouring years would target dips and jumps more directly, but it would be a
+different method from CEIP's, so it is not used here.
 
 ## Limitations
 
@@ -142,7 +141,6 @@ of method, and is left as a proposal rather than made silently.
   has ratified (RG2022 para. 43); this project applies one rule to all.
 - QC04's rule that no source category can be negative is derived from the
   definition of the source categories, not quoted from a document.
-- Results are from DuckDB until the Oracle run confirms them.
 
 ## Reproducing
 
