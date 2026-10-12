@@ -1,6 +1,7 @@
-data/
+/data/
 *.log
 __pycache__/
 .cache/
 test-results.xml
 .venv/
+service/target/

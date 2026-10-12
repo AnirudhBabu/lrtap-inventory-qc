@@ -38,6 +38,9 @@ create or replace package ut_qc07_time_series as
 
     --%test(Series shorter than min_years are not analysed)
     procedure short_series_not_analysed;
+
+    --%test(qc07_trend gives each series' fitted line)
+    procedure trend_view_gives_fitted_line;
 end ut_qc07_time_series;
 /
 
@@ -155,6 +158,23 @@ create or replace package body ut_qc07_time_series as
          where check_id = 'QC07' and param_name = 'min_years';
         ut.expect(findings()).to_be_empty();
     end short_series_not_analysed;
+
+    -- The trend series is 100 x 0.9^(year - 2010), so after log10 it is the
+    -- line 2 + (year - 2010) x log10(0.9): slope log10(0.9), and intercept
+    -- 2 - 2010 x log10(0.9). The API draws its trend line from this view.
+    procedure trend_view_gives_fitted_line is
+        l_years     number;
+        l_intercept number;
+        l_slope     number;
+    begin
+        add_trend;
+        select n_years, intercept, slope into l_years, l_intercept, l_slope
+          from qc07_trend
+         where country_code = 'XA' and pollutant_code = 'NOX' and sector_code = 'S1';
+        ut.expect(l_years).to_equal(10);
+        ut.expect(l_slope).to_be_within(1e-9).of_(log(10, 0.9));
+        ut.expect(l_intercept).to_be_within(1e-6).of_(2 - 2010 * log(10, 0.9));
+    end trend_view_gives_fitted_line;
 
 end ut_qc07_time_series;
 /
