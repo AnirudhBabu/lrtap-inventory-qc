@@ -8,7 +8,7 @@ but the Python standard library, following CEIP-M2025 p. 17:
     whose residual is more than 2 sample standard deviations from the mean
     residual.
 
-Run:  python3 docs/qc07_fixture_check.py
+Run:  uv run docs/qc07_fixture_check.py
 """
 
 import math

@@ -9,6 +9,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/oracle_container.sh
+require docker curl unzip
 
 scripts/fetch_data.sh
 

@@ -20,6 +20,17 @@ ARCHIVE=data/raw/eea_t_lrtap-convention_p_1980-2024_v01_r00.zip
 CSV=data/raw/CLRTAP_NFR19_V26_1_GF.csv
 SHA256=b4f04584358f36b6b643976593bfe0b400e174c00827bb45066a4e3da008c505
 
+for tool in curl unzip; do
+    command -v "$tool" >/dev/null 2>&1 || {
+        echo "Missing required tool: $tool (see Requirements in README.md)" >&2
+        exit 1
+    }
+done
+command -v sha256sum >/dev/null 2>&1 || command -v shasum >/dev/null 2>&1 || {
+    echo "Missing required tool: sha256sum or shasum (see Requirements in README.md)" >&2
+    exit 1
+}
+
 sha256_of() {
     if command -v sha256sum >/dev/null; then
         sha256sum "$1" | cut -d' ' -f1

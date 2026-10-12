@@ -16,8 +16,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Check the QC07 fixture expectations independently
-        run: python3 docs/qc07_fixture_check.py
+        run: uv run docs/qc07_fixture_check.py
 
       - name: Run the test suite against Oracle Database Free
         run: scripts/run_tests.sh

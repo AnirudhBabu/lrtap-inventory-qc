@@ -2,12 +2,13 @@
 # Runs the full test suite against a fresh Oracle Database Free container.
 # Used both locally and in GitHub Actions, so there is one way to run tests.
 #
-# Needs: docker, java 11+, curl, unzip.
+# Needs: docker, java 11 or later, curl, unzip.
 #
 #   scripts/run_tests.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/oracle_container.sh
+require docker java curl unzip
 
 CACHE=.cache
 

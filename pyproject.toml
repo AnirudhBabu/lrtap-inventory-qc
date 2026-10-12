@@ -1,0 +1,19 @@
+[project]
+name = "lrtap-inventory-qc"
+version = "0.1.0"
+description = "Quality checks for national air pollutant inventories reported under CLRTAP"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # DuckDB cross-check (scripts/crosscheck_duckdb.py)
+    "duckdb>=1.5.6,<2",
+    # translates db/*.sql from Oracle to DuckDB; the cross-check patches the
+    # SQL text it prints, so stay within the tested major version
+    "sqlglot>=30.22,<31",
+    # reads the EEA table definition (scripts/make_reference_data.py)
+    "openpyxl>=3.1.5,<4",
+]
+
+[tool.uv]
+# A set of scripts, not an installable package.
+package = false

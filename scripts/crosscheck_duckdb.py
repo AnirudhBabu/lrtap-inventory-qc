@@ -10,8 +10,10 @@ It does not re-implement anything. It reads the SQL files in db/, translates
 them with sqlglot, and patches the three Oracle-only constructs listed in
 ORACLE_ONLY below.
 
-Run:  pip install duckdb sqlglot
-      python3 scripts/crosscheck_duckdb.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+Run:  uv run scripts/crosscheck_duckdb.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+
+sqlglot is pinned in uv.lock: the patches below match the SQL text it
+prints, and another version may print it differently.
 Writes data/results/findings_duckdb.csv and prints a summary.
 """
 

@@ -12,9 +12,26 @@ APP_CONNECT="$APP_USER/$APP_PASSWORD@//localhost:1521/$PDB"
 
 log() { printf '\n== %s\n' "$*"; }
 
+# Stops with a clear message if any of the named commands is missing.
+# Python packages are managed by uv; these are the tools it cannot install.
+require() {
+    local missing=()
+    for tool in "$@"; do
+        command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo "Missing required tools: ${missing[*]} (see Requirements in README.md)" >&2
+        exit 1
+    fi
+}
+
 # Starts a new container with the repository at /work (read-only).
 # Any arguments are passed to docker run, e.g. extra -v mounts.
 start_oracle() {
+    docker info >/dev/null 2>&1 || {
+        echo "Docker is installed but not running, or this user cannot reach it." >&2
+        exit 1
+    }
     log "Starting a fresh Oracle Free container ($IMAGE)"
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
     docker run -d --name "$CONTAINER" -p 1521:1521 \

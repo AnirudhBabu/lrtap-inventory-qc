@@ -6,9 +6,12 @@ year and, for checks that can report one cell more than once (QC06), its
 detail text. The script reports findings present in only one run, and the
 largest relative difference in the numbers attached to matched findings.
 
-Run:  python3 scripts/compare_engines.py \\
+Run:  uv run scripts/compare_engines.py \\
           data/results/findings_oracle.csv data/results/findings_duckdb.csv
-Exits with 1 if any finding is in only one of the files.
+Exits with 1 if any finding is in only one of the files. Small differences
+in the numbers are expected: Oracle computes in decimal, DuckDB in binary
+floating point, and DuckDB adds in parallel, so the last digits of a sum can
+even differ between two DuckDB runs.
 """
 
 import csv

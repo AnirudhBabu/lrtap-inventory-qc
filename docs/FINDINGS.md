@@ -160,7 +160,8 @@ different method from CEIP's, so it is not used here.
 ## Reproducing
 
 ```
-python3 scripts/make_reference_data.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
-python3 scripts/crosscheck_duckdb.py   data/raw/CLRTAP_NFR19_V26_1_GF.csv
+scripts/fetch_data.sh                  # download and verify the EEA file
+uv run scripts/make_reference_data.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+uv run scripts/crosscheck_duckdb.py   data/raw/CLRTAP_NFR19_V26_1_GF.csv
 scripts/run_on_data.sh                 # the same on Oracle
 ```

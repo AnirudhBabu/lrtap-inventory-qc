@@ -62,7 +62,35 @@ scripts/   run_tests.sh             all tests on a fresh Oracle Free container
            make_reference_data.py   build db/03_reference_data.sql from the EEA's code lists
            crosscheck_duckdb.py     run the same SQL on DuckDB, to compare engines
            compare_engines.py       compare the Oracle and DuckDB findings
+pyproject.toml, uv.lock             Python dependencies (see Requirements)
 ```
+
+## Requirements
+
+Python dependencies are managed with [uv](https://docs.astral.sh/uv/).
+`pyproject.toml` lists them and `uv.lock` pins their exact versions, so
+every run uses the versions the findings were produced with. Install uv,
+then run any Python script through it:
+
+```
+uv run scripts/crosscheck_duckdb.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+```
+
+uv creates the project environment (`.venv/`) and installs the locked
+versions on first use; no separate install step is needed. The pin on
+sqlglot matters: `scripts/crosscheck_duckdb.py` adapts the SQL text sqlglot
+prints, and another version may print it differently.
+
+The Oracle side runs in Docker and needs tools uv cannot install. Each
+script checks for the ones it uses before starting, and stops with a
+message naming any that are missing:
+
+| Tool | Used by |
+|------|---------|
+| Docker, running | `run_tests.sh`, `run_on_data.sh` |
+| Java 11 or later | `run_tests.sh` (the utPLSQL command-line runner) |
+| curl, unzip | `run_tests.sh`, `run_on_data.sh`, `fetch_data.sh` |
+| sha256sum or shasum | `fetch_data.sh` |
 
 ## Running it on the data
 
@@ -74,15 +102,20 @@ On first run this downloads the EEA file (about 1.3 GB) and checks it is
 byte for byte the file the findings were produced from. It then loads the
 file into Oracle, runs every check, and writes
 `data/results/findings_oracle.csv`. `scripts/fetch_data.sh` does the
-download step on its own, for the DuckDB cross-check.
+download step on its own, for the DuckDB cross-check:
+
+```
+scripts/fetch_data.sh
+uv run scripts/crosscheck_duckdb.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+uv run scripts/compare_engines.py \
+    data/results/findings_oracle.csv data/results/findings_duckdb.csv
+```
 
 The DuckDB cross-check runs the same SQL on a second engine.
 `scripts/compare_engines.py` compares the two runs' findings; on the 2026 file
 they are identical (docs/FINDINGS.md).
 
 ## Running the tests
-
-Needs Docker, Java 11+, `curl` and `unzip`.
 
 ```
 scripts/run_tests.sh

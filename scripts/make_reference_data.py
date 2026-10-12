@@ -12,7 +12,7 @@ or if the result does not match the counts CEIP publishes (127 sectors summed
 into the national total, 8 memo items, 3 of them natural sources:
 CEIP-M2025 p. 7).
 
-Run:  python3 scripts/make_reference_data.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
+Run:  uv run scripts/make_reference_data.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
 """
 
 import csv
