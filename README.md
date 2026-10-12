@@ -53,15 +53,16 @@ A few decisions shape everything else:
 db/        schema, config, reference data, check views, loader, runner
            (install.sql runs them in order)
 tests/     utPLSQL test packages (install.sql installs them)
-docs/      CHECKS.md (each rule and its source), SOURCES.md, FINDINGS.md,
-           the EEA's table definition, and an independent check of QC07's
-           expected test results
+docs/      CHECKS.md (each rule and its source), SOURCES.md, FINDINGS.md and
+           its figures, the EEA's table definition, and an independent check
+           of QC07's expected test results
 scripts/   run_tests.sh             all tests on a fresh Oracle Free container
            run_on_data.sh           load the EEA file into Oracle and run the checks
            fetch_data.sh            download the EEA file if missing, and verify it
            make_reference_data.py   build db/03_reference_data.sql from the EEA's code lists
            crosscheck_duckdb.py     run the same SQL on DuckDB, to compare engines
            compare_engines.py       compare the Oracle and DuckDB findings
+           make_figures.py          draw docs/figures from the DuckDB run
 pyproject.toml, uv.lock             Python dependencies (see Requirements)
 ```
 
