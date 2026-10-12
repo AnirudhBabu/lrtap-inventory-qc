@@ -109,6 +109,11 @@ This finding also shows why the tolerance mattered. It was first set at 0.1 %,
 a guess, which would have hidden 12 of these 121 cells, all part of the same
 pattern. It is now set from the data (CHECKS.md, QC05).
 
+![Gap between each national total and the sum of its sectors. 27,580 totals
+match to rounding, within 0.001 %. The other 121, all PM10, lie between
+0.001 % and about 5 %; 12 of them fall below the first, guessed tolerance of
+0.1 %.](figures/qc05_tolerance.png)
+
 ### QC06: particle size classes
 
 By definition, PM2.5 is part of PM10, which is part of TSP (RG2022 para. 7(f)),
@@ -162,5 +167,6 @@ different method from CEIP's, so it is not used here.
 scripts/fetch_data.sh                  # download and verify the EEA file
 uv run scripts/make_reference_data.py data/raw/CLRTAP_NFR19_V26_1_GF.csv
 uv run scripts/crosscheck_duckdb.py   data/raw/CLRTAP_NFR19_V26_1_GF.csv
+uv run scripts/make_figures.py         # docs/figures, from the DuckDB run
 scripts/run_on_data.sh                 # the same on Oracle
 ```

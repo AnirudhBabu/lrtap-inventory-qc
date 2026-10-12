@@ -12,6 +12,8 @@ dependencies = [
     "sqlglot>=30.22,<31",
     # reads the EEA table definition (scripts/make_reference_data.py)
     "openpyxl>=3.1.5,<4",
+    # draws the figures in docs/figures (scripts/make_figures.py)
+    "matplotlib>=3.9,<4",
 ]
 
 [tool.uv]
