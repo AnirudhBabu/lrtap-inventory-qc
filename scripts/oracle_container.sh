@@ -1,5 +1,6 @@
-# Shared by run_tests.sh and run_on_data.sh: start a fresh Oracle Database
-# Free container and run SQL scripts inside it. Source this file; do not run it.
+# Shared by run_tests.sh, run_on_data.sh and run_service.sh: start a fresh
+# Oracle Database Free container and run SQL scripts inside it. Source this
+# file; do not run it.
 
 IMAGE="${ORACLE_IMAGE:-gvenzl/oracle-free:23-slim-faststart}"
 CONTAINER=lrtap-qc-oracle
@@ -9,6 +10,13 @@ APP_PASSWORD=qc
 PDB=FREEPDB1
 SYS_CONNECT="sys/$SYS_PASSWORD@//localhost:1521/$PDB as sysdba"
 APP_CONNECT="$APP_USER/$APP_PASSWORD@//localhost:1521/$PDB"
+
+# The Oracle and Tomcat containers share this Docker network, so the API
+# reaches the database by its container name.
+NETWORK=lrtap-qc
+# JDBC address of the database from the host, and from the network.
+JDBC_FROM_HOST="jdbc:oracle:thin:@//localhost:1521/$PDB"
+JDBC_FROM_NETWORK="jdbc:oracle:thin:@//$CONTAINER:1521/$PDB"
 
 log() { printf '\n== %s\n' "$*"; }
 
@@ -34,7 +42,8 @@ start_oracle() {
     }
     log "Starting a fresh Oracle Free container ($IMAGE)"
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-    docker run -d --name "$CONTAINER" -p 1521:1521 \
+    docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK" >/dev/null
+    docker run -d --name "$CONTAINER" --network "$NETWORK" -p 1521:1521 \
         -e ORACLE_PASSWORD="$SYS_PASSWORD" \
         -e APP_USER="$APP_USER" -e APP_USER_PASSWORD="$APP_PASSWORD" \
         -v "$PWD":/work:ro \

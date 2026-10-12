@@ -247,6 +247,9 @@ or a unit error.
    value" for "the respective year", and this project does the same.
 6. Only assess series with at least 3 years of data.
 
+Steps 1–3 are the view `qc07_trend`, one row per series; the check reads
+from it, and so does the API's series endpoint, so both use the same line.
+
 **Choices this project adds, and why.**
 
 - **Sample standard deviation** (Oracle `STDDEV`). The CEIP text does not say

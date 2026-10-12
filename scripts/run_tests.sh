@@ -2,13 +2,17 @@
 # Runs the full test suite against a fresh Oracle Database Free container.
 # Used both locally and in GitHub Actions, so there is one way to run tests.
 #
-# Needs: docker, java 11 or later, curl, unzip.
+# Needs: docker, java 17 or later, maven, curl, unzip.
+#
+# Two suites run against the same database: the utPLSQL tests of the SQL,
+# then the JUnit tests of the API in service/, including its tests against
+# Oracle.
 #
 #   scripts/run_tests.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/oracle_container.sh
-require docker java curl unzip
+require docker java mvn curl unzip
 
 CACHE=.cache
 
@@ -44,8 +48,12 @@ install_project
 log "Installing the tests"
 sqlplus_in_container "$APP_CONNECT" /work/tests install.sql
 
-log "Running the tests"
+log "Running the utPLSQL tests"
 "$CACHE/utPLSQL-cli/bin/utplsql" run "$APP_CONNECT" \
     -f=ut_documentation_reporter -c \
     -f=ut_junit_reporter -o=test-results.xml \
     --failure-exit-code=1
+
+log "Running the API tests (JUnit), including those against Oracle"
+LRTAP_JDBC_URL="$JDBC_FROM_HOST" LRTAP_JDBC_USER="$APP_USER" LRTAP_JDBC_PASSWORD="$APP_PASSWORD" \
+    mvn -B -f service/pom.xml verify

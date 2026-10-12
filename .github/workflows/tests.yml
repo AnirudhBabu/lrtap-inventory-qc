@@ -15,19 +15,23 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: maven
 
       - uses: astral-sh/setup-uv@v6
 
       - name: Check the QC07 fixture expectations independently
         run: uv run docs/qc07_fixture_check.py
 
-      - name: Run the test suite against Oracle Database Free
+      - name: Run the utPLSQL and JUnit suites against Oracle Database Free
         run: scripts/run_tests.sh
 
-      - name: Keep the test report
+      - name: Keep the test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: test-results.xml
+          path: |
+            test-results.xml
+            service/target/surefire-reports/
+            service/target/failsafe-reports/
           if-no-files-found: ignore
