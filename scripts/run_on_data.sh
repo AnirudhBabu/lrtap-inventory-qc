@@ -2,16 +2,15 @@
 # Loads the EEA file into a fresh Oracle Database Free container, runs every
 # check, and writes the findings to data/results/findings_oracle.csv.
 #
-# Needs: docker, and the EEA file at data/raw/CLRTAP_NFR19_V26_1_GF.csv
-# (download link in docs/SOURCES.md).
+# Needs: docker, curl and unzip. The EEA file is downloaded on first run
+# (scripts/fetch_data.sh).
 #
 #   scripts/run_on_data.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/oracle_container.sh
 
-DATA_FILE=data/raw/CLRTAP_NFR19_V26_1_GF.csv
-[ -f "$DATA_FILE" ] || { echo "missing $DATA_FILE (see docs/SOURCES.md)"; exit 1; }
+scripts/fetch_data.sh
 
 # SQL*Plus inside the container writes the results as the container's oracle
 # user, so the folder must be writable by it.

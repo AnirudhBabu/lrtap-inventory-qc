@@ -58,21 +58,22 @@ docs/      CHECKS.md (each rule and its source), SOURCES.md, FINDINGS.md,
            expected test results
 scripts/   run_tests.sh             all tests on a fresh Oracle Free container
            run_on_data.sh           load the EEA file into Oracle and run the checks
+           fetch_data.sh            download the EEA file if missing, and verify it
            make_reference_data.py   build db/03_reference_data.sql from the EEA's code lists
            crosscheck_duckdb.py     run the same SQL on DuckDB, to compare engines
 ```
 
 ## Running it on the data
 
-Download the dataset (link in docs/SOURCES.md) and put
-`CLRTAP_NFR19_V26_1_GF.csv` in `data/raw/`. Then:
-
 ```
 scripts/run_on_data.sh
 ```
 
-This loads the file into Oracle, runs every check, and writes
-`data/results/findings_oracle.csv`.
+On first run this downloads the EEA file (about 1.3 GB) and checks it is
+byte for byte the file the findings were produced from. It then loads the
+file into Oracle, runs every check, and writes
+`data/results/findings_oracle.csv`. `scripts/fetch_data.sh` does the
+download step on its own, for the DuckDB cross-check.
 
 ## Running the tests
 
@@ -94,4 +95,4 @@ expected results are also reproduced independently in
 ## Data licence
 
 The EEA dataset is published under CC BY 4.0. It is not included in this
-repository; download it from the link in docs/SOURCES.md.
+repository; `scripts/fetch_data.sh` downloads it.

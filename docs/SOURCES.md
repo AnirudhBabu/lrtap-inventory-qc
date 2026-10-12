@@ -46,8 +46,11 @@ Units in this dataset, as stated in its metadata:
 | kg | HCB, PCBs |
 | g I-TEQ | PCDD/F (dioxins and furans) |
 
-**File used.** `CLRTAP_NFR19_V26_1_GF.csv` from the dataset download:
-4,511,772 rows; UTF-8 with a byte-order mark; tab-separated; CRLF line ends; no
+**File used.** `CLRTAP_NFR19_V26_1_GF.csv`, from the archive
+`eea_t_lrtap-convention_p_1980-2024_v01_r00.zip` behind the record's "Download
+all files" link (<https://sdi.eea.europa.eu/datashare/s/ot4TQCkALbXQEnB/download>).
+SHA-256 `b4f04584358f36b6b643976593bfe0b400e174c00827bb45066a4e3da008c505`,
+426,434,388 bytes; scripts/fetch_data.sh checks both. 4,511,772 rows; UTF-8 with a byte-order mark; tab-separated; CRLF line ends; no
 quoting. Columns, as documented in **EEA-TD** below: countryCode, country,
 pollutantName, sectorCode, year, value, unit, notation, parentSectorCode,
 sectorName. (The table definition also lists a datasetId column, which this
