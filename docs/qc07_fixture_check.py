@@ -34,7 +34,7 @@ def flagged_years(series):
     result = {}
     for year, r in zip(years, residuals):
         z = abs(r - mean_r) / sd if sd > 0 else 0.0
-        if abs(r - mean_r) > Z_THRESHOLD * sd and abs(r) > MIN_ABS_LOG_RESID:
+        if abs(r - mean_r) > Z_THRESHOLD * sd and abs(r - mean_r) > MIN_ABS_LOG_RESID:
             result[year] = round(z, 3)
     return result
 

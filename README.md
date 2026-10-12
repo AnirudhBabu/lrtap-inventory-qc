@@ -1,0 +1,89 @@
+# LRTAP inventory QC
+
+Automated quality checks for national air pollutant emission inventories
+reported under the UNECE Air Convention (CLRTAP), built in Oracle SQL and
+PL/SQL and tested with utPLSQL.
+
+The data is the European Environment Agency's consolidated dataset of what
+32 countries reported for 1980–2024 (see [docs/SOURCES.md](docs/SOURCES.md)).
+The checks follow the rules those countries report under and the review
+methods used by CEIP, the EMEP centre in Vienna that reviews these
+inventories each year.
+
+## What it checks
+
+| ID   | Check | Severity |
+|------|-------|----------|
+| QC01 | A required cell has neither a value nor a notation key | ERROR |
+| QC02 | A cell reports 0 instead of a notation key | WARNING |
+| QC03 | A cell is reported as Not Estimated (NE) | WARNING |
+| QC04 | An emission is negative | ERROR |
+| QC05 | NFR sectors do not add up to the national total | ERROR |
+| QC06 | Particle size classes are out of order (BC ≤ PM2.5 ≤ PM10 ≤ TSP) | ERROR |
+| QC07 | A value is a dip or jump against its own time series | WARNING |
+
+[docs/CHECKS.md](docs/CHECKS.md) gives, for every check, the reason it matters,
+the source of the rule (to the paragraph or page), and why each threshold has
+the value it does. Where this project departs from or adds to a source, it says
+so.
+
+## Design
+
+A few decisions shape everything else:
+
+- **Constraints for what is meaningless, checks for what is suspicious.** A
+  row that cannot be read at all (unknown notation key, no year) is rejected
+  by the loader with a reason. A row that can be stored but looks wrong is
+  kept, and a check reports it. Dropping suspicious rows would hide them and
+  break other checks, such as sector sums.
+- **One check, one view.** Each check is a single SQL view that a scientist
+  can read on its own. All views return the same columns, so a small runner
+  stores every check's findings in one table. Adding a check means writing a
+  view and adding a row to `qc_check`.
+- **Thresholds are data, with reasons.** Every tunable number lives in
+  `qc_param` next to a sentence saying where it comes from.
+- **Notation keys are never turned into numbers.** `NE` (not estimated) and
+  `NO` (not occurring) mean very different things, and both are different
+  from zero.
+
+## Layout
+
+```
+db/        schema, reference data, check views, loader, runner (install.sql runs them in order)
+tests/     utPLSQL test packages, one per check (install.sql installs them)
+docs/      check catalogue, sources, and an independent check of QC07's expected results
+scripts/   run_tests.sh: starts Oracle Free in Docker and runs the full suite
+```
+
+## Running the tests
+
+Needs Docker, Java 11+, `curl` and `unzip`.
+
+```
+scripts/run_tests.sh
+```
+
+This starts a fresh Oracle Database Free container, installs utPLSQL, the
+project and the tests, and runs every test. GitHub Actions runs the same
+script on every push.
+
+The tests were written before the code they test. Each uses a small dataset
+whose expected result is worked out by hand; for the time-series check, the
+expected results are also reproduced independently in
+`docs/qc07_fixture_check.py`.
+
+## Status
+
+- [x] Check catalogue with sources
+- [x] Schema, checks, loader, runner
+- [x] Test suite (43 tests)
+- [ ] Test suite run on Oracle (CI)
+- [ ] Loader mapping for the EEA file and NFR19 sector list
+- [ ] Run on the 2026 EEA dataset and write up the findings
+- [ ] Calibrate QC05 and QC06 tolerances on the real data
+- [ ] Recalculation check between dataset editions
+
+## Data licence
+
+The EEA dataset is published under CC BY 4.0. It is not included in this
+repository; download it from the link in docs/SOURCES.md.

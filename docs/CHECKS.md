@@ -62,8 +62,9 @@ Which pollutants are required, and from which year, is held as data in
 its paragraph. PAHs are taken as the four indicator compounds and their total,
 as reported in the EEA dataset.
 
-Sectors in scope are those flagged `required_in_template = 'Y'` in
-`ref_sector`, which is loaded from the NFR19 template.
+Sectors in scope are the NFR sectors and memo items in `ref_sector`
+(roles `SECTOR` and `MEMO`), which is loaded from the NFR19 template. The
+national total is not required as a separate cell here; QC05 checks it.
 
 **Known limitation.** Heavy metal and POP obligations depend on which Aarhus
 protocols a Party has ratified (RG2022 para. 43). This project does not hold
@@ -148,13 +149,16 @@ particle is also a PM10 particle. TSP has no size cut-off and therefore contains
 both. Black carbon is a component of fine particulate matter. Finland's national
 inventory QA/QC tooling flags exactly this ordering (FI-IIR2025 p. 44).
 
-**Rule.** For each pair (smaller, larger) in (BC, PM2.5), (PM2.5, PM10),
-(PM10, TSP), where both cells are numeric:
+**Rule.** For every pair of classes where the first is finer than the second
+(six pairs among BC, PM2.5, PM10, TSP), in the same country, sector and year,
+where both cells are numeric:
 
-    smaller > larger × (1 + rel_tol)
+    finer > coarser × (1 + rel_tol)
 
-Pairs where either side is a notation key are skipped, because there is nothing
-to compare.
+All pairs are compared, not only neighbours, so PM2.5 above TSP is still found
+when PM10 is reported as a notation key. Pairs where either side is a notation
+key are skipped, because there is nothing to compare. The finding is recorded
+on the finer class's cell.
 
 **Parameters.**
 
@@ -174,13 +178,16 @@ or a unit error.
 **Method.** This reproduces the CEIP stage 2 test (CEIP-M2025 p. 17):
 
 1. Take one series: a (country, pollutant, sector) over all years with a
-   positive numeric value.
+   positive numeric value. NFR sectors and the national total are analysed;
+   memo items are not, since they are not part of the total the materiality
+   test refers to.
 2. Transform values with log10.
 3. Fit a least-squares line of log10(value) against year.
 4. Flag a year if its residual is more than 2 standard deviations of all the
    series' residuals away from their mean.
-5. Only assess a year if the value is more than 3 % of that year's national
-   total for the pollutant.
+5. Only report a year if the flagged value is more than 3 % of that year's
+   national total for the pollutant. CEIP applies this to "the flagged data
+   value" for "the respective year", and this project does the same.
 6. Only assess series with at least 3 years of data.
 
 **Choices this project adds, and why.**
@@ -196,6 +203,20 @@ or a unit error.
 - **Zeros and notation keys are excluded**, because log10 is undefined for them.
 - **Years without a numeric national total are not assessed**, because the 3 %
   materiality test cannot be computed. QC01 and QC05 report those gaps.
+
+**Consequences of the CEIP method worth knowing.**
+
+- *Deep dips can escape review.* Because the 3 % test is applied to the
+  flagged value itself, a dip that pushes a value below 3 % of the total is
+  not reported, however sharp it is. A test pins this behaviour down
+  (`dip_below_materiality_not_reported`). Testing the trend value instead
+  would catch such dips; it would be a departure from CEIP and is not done.
+- *Short series cannot be flagged at all.* In any set of n numbers, no value
+  lies more than (n − 1)/√n sample standard deviations from their mean
+  (Samuelson's inequality). With a threshold of 2 that bound only exceeds 2
+  from n = 6, so a series needs at least 6 years before any year can be
+  flagged, and CEIP's 3-year minimum never decides the outcome. It is kept
+  as a parameter for fidelity. `docs/qc07_fixture_check.py` computes the 6.
 
 **Not reproduced.** CEIP also flags whole series whose standard deviation exceeds
 20 % of the series mean (CEIP-M2025 p. 17). That is a property of the series, not
