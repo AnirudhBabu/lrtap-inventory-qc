@@ -61,6 +61,7 @@ scripts/   run_tests.sh             all tests on a fresh Oracle Free container
            fetch_data.sh            download the EEA file if missing, and verify it
            make_reference_data.py   build db/03_reference_data.sql from the EEA's code lists
            crosscheck_duckdb.py     run the same SQL on DuckDB, to compare engines
+           compare_engines.py       compare the Oracle and DuckDB findings
 ```
 
 ## Running it on the data
@@ -74,6 +75,10 @@ byte for byte the file the findings were produced from. It then loads the
 file into Oracle, runs every check, and writes
 `data/results/findings_oracle.csv`. `scripts/fetch_data.sh` does the
 download step on its own, for the DuckDB cross-check.
+
+The DuckDB cross-check runs the same SQL on a second engine.
+`scripts/compare_engines.py` compares the two runs' findings; on the 2026 file
+they are identical (docs/FINDINGS.md).
 
 ## Running the tests
 

@@ -1,8 +1,13 @@
 # Findings: the 2026 EEA LRTAP dataset
 
-**How these numbers were produced.** Every number here comes from
-`scripts/crosscheck_duckdb.py`, which runs this project's SQL on DuckDB.
-`scripts/run_on_data.sh` runs the same SQL on Oracle.
+**How these numbers were produced.** The checks were run twice on the same
+file, by two different database engines executing the same SQL: Oracle
+Database Free (`scripts/run_on_data.sh`) and DuckDB
+(`scripts/crosscheck_duckdb.py`). Both reported the same 486,697 findings,
+cell for cell, with no finding found by only one engine
+(`scripts/compare_engines.py`). The numbers attached to the findings agree to
+the nine significant digits the Oracle run exported; the QC07 z-scores agree
+exactly. The figures below are computed from these findings.
 
 ## Question
 

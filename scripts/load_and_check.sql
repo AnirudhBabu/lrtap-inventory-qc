@@ -72,15 +72,21 @@ prompt Findings by check:
 select check_id, count(*) as findings from qc_finding where run_id = :run_id group by check_id order by 1;
 
 -- Same columns and order as data/results/findings_duckdb.csv, so the two
--- engines' results can be compared directly.
-set markup csv on quote off
+-- engines' results can be compared (scripts/compare_engines.py). Text is
+-- quoted, as some details contain commas. Numbers go through TO_CHAR 'TM9'
+-- so they keep full precision; SQL*Plus would otherwise print at most the
+-- digits that fit its default column width.
+set markup csv on quote on
 set feedback off
 set termout off
 spool /results/findings_oracle.csv
-select check_id, country_code, pollutant_code, sector_code, year, observed, expected, detail
+select check_id, country_code, pollutant_code, sector_code, year,
+       to_char(observed, 'TM9') as observed,
+       to_char(expected, 'TM9') as expected,
+       detail
   from qc_finding
  where run_id = :run_id
- order by check_id, country_code, pollutant_code, sector_code, year, observed, expected, detail;
+ order by check_id, country_code, pollutant_code, sector_code, year, detail;
 spool off
 
 exit
