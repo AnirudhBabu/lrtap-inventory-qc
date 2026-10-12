@@ -11,7 +11,7 @@
 -- Party.
 
 create global temporary table ut_expected_cell (
-    country_code    varchar2(3),
+    country_code    varchar2(5),
     pollutant_code  varchar2(20),
     sector_code     varchar2(30),
     year            number(4)
@@ -21,10 +21,19 @@ create or replace package ut_fixture as
 
     procedure reset;
 
+    -- Countries are added automatically by add_value and add_key, so tests
+    -- only call this to create an out-of-scope area.
+    procedure add_country(
+        p_code     in varchar2,
+        p_in_scope in varchar2 default 'Y',
+        p_note     in varchar2 default null);
+
     procedure add_pollutant(
         p_code               in varchar2,
         p_required_from_year in number   default null,
-        p_source_name        in varchar2 default null);
+        p_source_name        in varchar2 default null,
+        p_in_scope           in varchar2 default 'Y',
+        p_note               in varchar2 default null);
 
     procedure add_sector(
         p_code in varchar2,
@@ -83,16 +92,40 @@ create or replace package body ut_fixture as
         delete from emission;
         delete from ref_sector;
         delete from ref_pollutant;
+        delete from ref_country;
     end reset;
+
+    procedure add_country(
+        p_code     in varchar2,
+        p_in_scope in varchar2 default 'Y',
+        p_note     in varchar2 default null)
+    is
+    begin
+        insert into ref_country (country_code, country_name, in_scope, scope_note)
+        values (p_code, 'Fixture area ' || p_code, p_in_scope, p_note);
+    end add_country;
+
+    procedure ensure_country(p_code in varchar2) is
+        n number;
+    begin
+        select count(*) into n from ref_country where country_code = p_code;
+        if n = 0 then
+            add_country(p_code);
+        end if;
+    end ensure_country;
 
     procedure add_pollutant(
         p_code               in varchar2,
         p_required_from_year in number   default null,
-        p_source_name        in varchar2 default null)
+        p_source_name        in varchar2 default null,
+        p_in_scope           in varchar2 default 'Y',
+        p_note               in varchar2 default null)
     is
     begin
-        insert into ref_pollutant (pollutant_code, source_name, unit, required_from_year, source_ref)
-        values (p_code, coalesce(p_source_name, p_code), 'Gg', p_required_from_year, 'test fixture');
+        insert into ref_pollutant (pollutant_code, source_name, unit, required_from_year,
+                                   source_ref, in_scope, scope_note)
+        values (p_code, coalesce(p_source_name, p_code), 'Gg', p_required_from_year,
+                'test fixture', p_in_scope, p_note);
     end add_pollutant;
 
     procedure add_sector(
@@ -112,6 +145,7 @@ create or replace package body ut_fixture as
         p_value     in number)
     is
     begin
+        ensure_country(p_country);
         insert into emission (country_code, pollutant_code, sector_code, year, value)
         values (p_country, p_pollutant, p_sector, p_year, p_value);
     end add_value;
@@ -124,6 +158,7 @@ create or replace package body ut_fixture as
         p_key       in varchar2)
     is
     begin
+        ensure_country(p_country);
         insert into emission (country_code, pollutant_code, sector_code, year, notation_key)
         values (p_country, p_pollutant, p_sector, p_year, p_key);
     end add_key;
@@ -166,7 +201,7 @@ create or replace package body ut_fixture as
         c sys_refcursor;
     begin
         open c for
-            'select cast(country_code as varchar2(3)) as country_code,'
+            'select cast(country_code as varchar2(5)) as country_code,'
             || ' cast(pollutant_code as varchar2(20)) as pollutant_code,'
             || ' cast(sector_code as varchar2(30)) as sector_code,'
             || ' cast(year as number(4)) as year'

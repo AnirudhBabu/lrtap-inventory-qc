@@ -75,14 +75,14 @@ create or replace package body ut_qc05_sector_sum as
         ut.expect(l_expected).to_equal(16);
     end mismatch_reported_with_numbers;
 
-    -- Sum is 15 in both countries.
-    --   XA total 15.01: |15 - 15.01| / 15.01 = 0.00067, inside 0.001
-    --   XB total 15.02: |15 - 15.02| / 15.02 = 0.00133, outside 0.001
+    -- Sum is 15 in both countries; rel_tol is 0.00001.
+    --   XA total 15.0001: |15 - 15.0001| / 15.0001 = 0.0000067, inside
+    --   XB total 15.0002: |15 - 15.0002| / 15.0002 = 0.0000133, outside
     procedure tolerance_boundary is
     begin
-        for c in (select 'XA' as code, 15.01 as total from dual
+        for c in (select 'XA' as code, 15.0001 as total from dual
                   union all
-                  select 'XB', 15.02 from dual) loop
+                  select 'XB', 15.0002 from dual) loop
             ut_fixture.add_value(c.code, 'NOX', 'S1',  2023, 10);
             ut_fixture.add_value(c.code, 'NOX', 'S2',  2023, 5);
             ut_fixture.add_value(c.code, 'NOX', 'TOT', 2023, c.total);

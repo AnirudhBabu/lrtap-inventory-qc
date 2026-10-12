@@ -6,9 +6,10 @@ set define off
 
 @@01_schema.sql
 @@02_config.sql
-@@03_checks.sql
-@@04_loader.sql
-@@05_qc_runner.sql
+@@03_reference_data.sql
+@@04_checks.sql
+@@05_loader.sql
+@@06_qc_runner.sql
 
 -- SQL*Plus reports PL/SQL compilation errors as warnings and carries on.
 -- Fail the install instead, after showing what went wrong.

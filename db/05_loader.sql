@@ -7,9 +7,10 @@
 -- Every staging row with its interpreted values and, if it cannot be loaded,
 -- the first reason found. Rules, in the order they are applied:
 --
---   country code      must be 2 or 3 characters
---   pollutant         must match ref_pollutant.source_name
---   sector            must match ref_sector.sector_code
+--   country           must be in ref_country, and in scope
+--   pollutant         must match ref_pollutant.source_name, and be in scope
+--   sector            must match ref_sector.sector_code (after trimming:
+--                     a few codes in the 2026 file carry a trailing space)
 --   year              must be a whole number between 1900 and 2100
 --   cell              a number, or a notation key from ref_notation_key;
 --                     it may arrive in either the value or the notation column,
@@ -25,12 +26,18 @@ with
 cleaned as (
     select s.stg_row_id,
            trim(s.country_code)                         as country_code,
+           co.country_code                              as known_country,
+           co.in_scope                                  as country_in_scope,
+           co.scope_note                                as country_note,
            p.pollutant_code,
+           p.in_scope                                   as pollutant_in_scope,
+           p.scope_note                                 as pollutant_note,
            r.sector_code,
            to_number(trim(s.year_text) default null on conversion error) as year_number,
            trim(s.value_text)                           as value_text,
            trim(s.notation_text)                        as notation_text
       from stg_emission s
+      left join ref_country   co on co.country_code = trim(s.country_code)
       left join ref_pollutant p on p.source_name = trim(s.pollutant_name)
       left join ref_sector    r on r.sector_code = trim(s.sector_code)
 ),
@@ -45,10 +52,14 @@ cell as (
 first_reason as (
     select c.*,
            case
-               when c.country_code is null or length(c.country_code) not between 2 and 3
-                   then 'country code is not 2 or 3 characters'
+               when c.known_country is null
+                   then 'unknown country'
+               when c.country_in_scope = 'N'
+                   then 'out of scope: ' || c.country_note
                when c.pollutant_code is null
                    then 'unknown pollutant'
+               when c.pollutant_in_scope = 'N'
+                   then 'out of scope: ' || c.pollutant_note
                when c.sector_code is null
                    then 'unknown sector'
                when c.year_number is null

@@ -63,8 +63,14 @@ its paragraph. PAHs are taken as the four indicator compounds and their total,
 as reported in the EEA dataset.
 
 Sectors in scope are the NFR sectors and memo items in `ref_sector`
-(roles `SECTOR` and `MEMO`), which is loaded from the NFR19 template. The
-national total is not required as a separate cell here; QC05 checks it.
+(roles `SECTOR` and `MEMO`). The national total is not required as a separate
+cell here; QC05 checks it.
+
+**On the 2026 EEA data** this check finds nothing: every cell for the 32
+reporting Parties has a value or a notation key. The only empty rows in the
+file belong to the EU27 and EEA32 aggregates, which are out of scope. The check
+is kept because it costs nothing and would catch a gap in a later edition, or in
+a Party's own submission (see the note on the data in SOURCES.md).
 
 **Known limitation.** Heavy metal and POP obligations depend on which Aarhus
 protocols a Party has ratified (RG2022 para. 43). This project does not hold
@@ -80,9 +86,8 @@ was not obliged to fill. `NR` (not relevant) exists precisely for this case.
 notation key says *why* there is no number. CEIP stage 1 also flags pollutants
 where more than 10 % of cells are zero (CEIP-M2025 p. 14).
 
-**Rule.** `value = 0`. One finding per cell. The share of zeros per country and
-pollutant appears in the summary view so the CEIP 10 % criterion can be read off
-directly.
+**Rule.** `value = 0`. One finding per cell. The CEIP 10 % criterion is a share
+per country and pollutant, which docs/FINDINGS.md computes from these findings.
 
 **Note.** CEIP counts any number below 0.005 as "0" because its tables are
 displayed at that precision. This project stores full precision and only flags
@@ -113,7 +118,13 @@ sign error or a unit error.
 derived from the definition of the NFR source categories, and is labelled as such
 rather than attributed to a source that does not say it.
 
-**Rule.** `value < 0`.
+**Rule.** `value < 0`, for NFR sectors and memo items only.
+
+**Why only those rows.** The dataset also has an `Adjustments` row: emission
+reductions approved for compliance purposes, which the dataset reports as
+negative numbers (27 such cells for the 32 Parties in the 2026 file). They are not source
+categories, so a negative value there is expected. Checking them would bury the
+two genuine negatives the check does find.
 
 ## QC05 Sectors do not sum to the national total
 
@@ -129,7 +140,13 @@ the total was edited by hand.
 
 **Rule.** For each (country, pollutant, year) with a numeric national total:
 
-    |sum(sectors with in_national_total = 'Y') − total| > rel_tol × |total|
+    |sum(sectors with role SECTOR) − total| > rel_tol × |total|
+
+The total checked is `NATIONAL TOTAL`, the national total for the entire
+territory based on fuel sold. Which sectors count toward it is not typed in by
+hand: the dataset flags them (`parentSectorCode = 'NATIONAL TOTAL'`), and
+`scripts/make_reference_data.py` refuses to proceed unless that gives exactly the
+127 summed sectors and 8 memo items CEIP describes (CEIP-M2025 p. 7).
 
 Only numeric sector values are summed; notation keys contribute nothing.
 
@@ -137,7 +154,24 @@ Only numeric sector values are summed; notation keys contribute nothing.
 
 | Parameter | Value | Reason |
 |-----------|-------|--------|
-| `rel_tol` | 0.001 | Provisional. Allows for rounding in reported values. To be calibrated against the distribution of discrepancies in the real data, and the calibration recorded here. |
+| `rel_tol` | 0.00001 | Calibrated on the 2026 data; see below. |
+
+**Calibration.** The tolerance was first set at 0.1 %, as a guess. On the 2026
+data, the relative gap between total and sector sum falls into two groups:
+
+| Relative gap | National totals |
+|--------------|-----------------|
+| ≤ 0.001 % | 27,580 |
+| 0.001 % – 0.1 % | 12 |
+| > 0.1 % | 109 |
+
+(Of 28,446 numeric totals; 745 are zero with a zero sum and are excluded.)
+
+The first group is rounding. Every one of the other 121 is PM10, in six
+countries, and in every one the sectors sum to *less* than the total. The 12 in
+the middle belong to the same countries and the same pattern, so a 0.1 % tolerance
+would have hidden part of one systematic problem. The tolerance is therefore set
+at 0.001 %, at the edge of the rounding group.
 
 ## QC06 Particle size classes out of order
 
@@ -164,7 +198,20 @@ on the finer class's cell.
 
 | Parameter | Value | Reason |
 |-----------|-------|--------|
-| `rel_tol` | 0.001 | Provisional. Avoids flagging values that are equal before rounding. |
+| `rel_tol` | 0.001 | Avoids flagging classes that are equal before rounding. Checked against the 2026 data, see below. |
+
+**Checking the tolerance.** Unlike QC05, the 2026 data shows no natural break.
+Of the comparable pairs, 298,181 are in order and 52,960 exactly equal (common
+where a source emits only fine particles). Of those out of order, 26 exceed the
+coarser class by less than 0.1 % and are not reported; 873 exceed it by more,
+852 of them by more than 1 %. The tolerance therefore decides only a handful of
+borderline cases, and stays at 0.1 %.
+
+**Zero as the coarser class.** When the coarser class is reported as 0 and the
+finer one is positive, the check reports it: a positive PM2.5 inside zero TSP is
+still a contradiction. In the 2026 data such findings come almost entirely from
+zeros used in place of a notation key (QC02), so docs/FINDINGS.md reports them
+separately from inversions between two positive values.
 
 ## QC07 Time-series dip or jump
 
@@ -217,6 +264,16 @@ or a unit error.
   from n = 6, so a series needs at least 6 years before any year can be
   flagged, and CEIP's 3-year minimum never decides the outcome. It is kept
   as a parameter for fidelity. `docs/qc07_fixture_check.py` computes the 6.
+
+**What it finds on the 2026 data.** 27 % of QC07's findings fall on the first
+or last year of their series, where about 6 % would if flags were spread evenly
+over years. A single straight line fitted through a curved series, such as a
+steep decline that levels off, misses most at its ends. Germany's SO2 total illustrates it:
+1990 is flagged at 2.5 standard deviations from the trend line, yet its value
+(5,461 kt) sits naturally next to 1991 and 1992 (3,965 and 3,237 kt). The method
+is reproduced as published, and this property is reported rather than fixed;
+a local comparison with neighbouring years would target dips and jumps more
+directly.
 
 **Not reproduced.** CEIP also flags whole series whose standard deviation exceeds
 20 % of the series mean (CEIP-M2025 p. 17). That is a property of the series, not

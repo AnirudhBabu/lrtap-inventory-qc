@@ -10,6 +10,9 @@ insert into ref_notation_key values ('C',  'Confidential: reporting could disclo
 insert into ref_notation_key values ('NA', 'Not applicable: the activity occurs but does not emit this pollutant', 'RG2022 para. 12(d)');
 insert into ref_notation_key values ('NO', 'Not occurring: the category or process does not occur in the Party', 'RG2022 para. 12(e)');
 insert into ref_notation_key values ('NR', 'Not relevant: reporting not strictly required, e.g. before a base year', 'RG2022 para. 12(f)');
+-- NI is not one of the Guidelines' keys; the EEA dataset's table definition
+-- lists it. No cell in the 2026 edition uses it.
+insert into ref_notation_key values ('NI', 'Not informed', 'EEA LRTAP table definition, sheet notation');
 
 ------------------------------------------------------------------------------
 -- Checks (see docs/CHECKS.md for the reasoning behind each one)
@@ -29,10 +32,10 @@ insert into qc_check (check_id, title, severity, view_name) values
 insert into qc_check (check_id, title, severity, view_name) values
     ('QC07', 'Time-series dip or jump', 'WARNING', 'QC07_TIME_SERIES');
 
-insert into qc_param values ('QC05', 'rel_tol', 0.001,
-    'Provisional: allows for rounding in reported values. To be calibrated on the real data.');
+insert into qc_param values ('QC05', 'rel_tol', 0.00001,
+    'Calibrated on the 2026 EEA data: 27,580 of 27,701 non-zero national totals agree within 1e-5 (rounding), and every larger gap is a PM10 total above its sector sum. See docs/CHECKS.md.');
 insert into qc_param values ('QC06', 'rel_tol', 0.001,
-    'Provisional: avoids flagging classes that are equal before rounding.');
+    'Avoids flagging classes equal before rounding. On the 2026 data it decides only 26 borderline pairs, see docs/CHECKS.md.');
 insert into qc_param values ('QC07', 'z_threshold', 2,
     'Residual more than 2 standard deviations from the mean residual (CEIP-M2025 p. 17).');
 insert into qc_param values ('QC07', 'materiality_share', 0.03,

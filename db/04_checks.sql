@@ -81,17 +81,22 @@ select country_code,
 
 ------------------------------------------------------------------------------
 -- QC04 Negative emission
+-- Only source categories (NFR sectors and memo items) are checked. Rows such
+-- as approved adjustments are subtracted from a total and are negative by
+-- design.
 ------------------------------------------------------------------------------
 create or replace view qc04_negative_value as
-select country_code,
-       pollutant_code,
-       sector_code,
-       year,
-       value as observed,
+select e.country_code,
+       e.pollutant_code,
+       e.sector_code,
+       e.year,
+       e.value as observed,
        cast(null as number) as expected,
        'Negative emission; every NFR category is a source' as detail
-  from emission
- where value < 0;
+  from emission e
+  join ref_sector s on s.sector_code = e.sector_code
+ where s.role in ('SECTOR', 'MEMO')
+   and e.value < 0;
 
 ------------------------------------------------------------------------------
 -- QC05 Sectors do not sum to the national total

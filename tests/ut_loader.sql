@@ -16,6 +16,12 @@ create or replace package ut_loader as
     --%test(Notation keys are trimmed and upper-cased)
     procedure key_trimmed_and_upper_cased;
 
+    --%test(Sector codes are trimmed, as some arrive with a trailing space)
+    procedure sector_code_trimmed;
+
+    --%test(Known but out-of-scope areas and pollutants are not loaded, with the reason)
+    procedure out_of_scope_not_loaded;
+
     --%test(Rows that cannot be interpreted are rejected with a reason)
     procedure uninterpretable_rows_rejected;
 
@@ -32,6 +38,7 @@ create or replace package body ut_loader as
     procedure setup is
     begin
         ut_fixture.reset;
+        ut_fixture.add_country('XA');
         ut_fixture.add_pollutant('NOX', 1990, p_source_name => 'NOx');
         ut_fixture.add_sector('S1');
     end setup;
@@ -93,12 +100,36 @@ create or replace package body ut_loader as
     procedure key_trimmed_and_upper_cased is
         l_key emission.notation_key%type;
     begin
-        stage('XA', 'NOx', 'S1', '2023', null, ' ne ');
+        -- The 2026 EEA file has a few 'iE' cells.
+        stage('XA', 'NOx', 'S1', '2023', null, ' iE ');
         inventory_loader.load;
 
         select notation_key into l_key from emission;
-        ut.expect(l_key).to_equal('NE');
+        ut.expect(l_key).to_equal('IE');
     end key_trimmed_and_upper_cased;
+
+    procedure sector_code_trimmed is
+        l_sector emission.sector_code%type;
+    begin
+        stage('XA', 'NOx', 'S1 ', '2023', '1.0', null);
+        inventory_loader.load;
+
+        select sector_code into l_sector from emission;
+        ut.expect(l_sector).to_equal('S1');
+    end sector_code_trimmed;
+
+    procedure out_of_scope_not_loaded is
+    begin
+        ut_fixture.add_country('XZ', p_in_scope => 'N', p_note => 'aggregate of other areas');
+        ut_fixture.add_pollutant('FUEL', null, p_source_name => 'Liquid Fuels',
+                                 p_in_scope => 'N', p_note => 'activity data, not an emission');
+        stage('XZ', 'NOx',          'S1', '2001', '1.0', null);
+        stage('XA', 'Liquid Fuels', 'S1', '2002', '1.0', null);
+        inventory_loader.load;
+
+        ut.expect(reason_for('2001')).to_equal('out of scope: aggregate of other areas');
+        ut.expect(reason_for('2002')).to_equal('out of scope: activity data, not an emission');
+    end out_of_scope_not_loaded;
 
     -- Each row is told apart by its year text, so the expected reason can be
     -- read back for each one.
@@ -112,7 +143,7 @@ create or replace package body ut_loader as
         stage('XA', 'NOx',   'ZZ', '2005', '1.0', null);   -- unknown sector
         stage('XA', 'NOx',   'S1', '20x6', '1.0', null);   -- not a year
         stage('XA', 'NOx',   'S1', '2007.5', '1.0', null); -- not a whole year
-        stage('XAXA', 'NOx', 'S1', '2008', '1.0', null);   -- country code too long
+        stage('QQ', 'NOx',   'S1', '2008', '1.0', null);   -- unknown country
         inventory_loader.load;
 
         ut.expect(reason_for('2001')).to_equal('empty cell');
@@ -122,7 +153,7 @@ create or replace package body ut_loader as
         ut.expect(reason_for('2005')).to_equal('unknown sector');
         ut.expect(reason_for('20x6')).to_equal('year is not a whole number between 1900 and 2100');
         ut.expect(reason_for('2007.5')).to_equal('year is not a whole number between 1900 and 2100');
-        ut.expect(reason_for('2008')).to_equal('country code is not 2 or 3 characters');
+        ut.expect(reason_for('2008')).to_equal('unknown country');
 
         select count(*) into n from emission;
         ut.expect(n).to_equal(0);

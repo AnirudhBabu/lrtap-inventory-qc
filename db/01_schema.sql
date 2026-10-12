@@ -20,6 +20,22 @@ create table ref_notation_key (
     constraint ref_notation_key_pk primary key (notation_key)
 );
 
+-- Reference tables for countries and pollutants share one pattern: every
+-- name that appears in the source data is listed, and in_scope = 'N' marks
+-- the ones that are known but deliberately not loaded, with the reason in
+-- scope_note. The loader can then tell "deliberately left out" apart from
+-- "never seen before", which is a data problem.
+
+-- Areas in the EEA dataset: the reporting Parties, plus aggregates.
+create table ref_country (
+    country_code  varchar2(5)   not null,
+    country_name  varchar2(100) not null,
+    in_scope      char(1)       not null,
+    scope_note    varchar2(200),
+    constraint ref_country_pk primary key (country_code),
+    constraint ref_country_in_scope_ck check (in_scope in ('Y', 'N'))
+);
+
 -- pollutant_code is this project's name for a pollutant; source_name is the
 -- name used in the EEA dataset. Keeping both means a renamed pollutant in a
 -- future edition is a one-row change here, not a change to every check.
@@ -29,8 +45,11 @@ create table ref_pollutant (
     unit                varchar2(20)  not null,
     required_from_year  number(4),     -- null: reporting is not required
     source_ref          varchar2(100) not null,
+    in_scope            char(1)       default 'Y' not null,
+    scope_note          varchar2(200),
     constraint ref_pollutant_pk primary key (pollutant_code),
-    constraint ref_pollutant_source_uk unique (source_name)
+    constraint ref_pollutant_source_uk unique (source_name),
+    constraint ref_pollutant_in_scope_ck check (in_scope in ('Y', 'N'))
 );
 
 -- role says how a sector takes part in the national total:
@@ -38,7 +57,8 @@ create table ref_pollutant (
 --   MEMO    a memo item, reported but excluded from the total
 --           (aviation cruise, international shipping, natural sources)
 --   TOTAL   the national total that QC05 checks the sectors against
---   OTHER   any other aggregate row; loaded but not checked
+--   OTHER   any other row that is not a source category, e.g. the total for
+--           compliance and approved adjustments; loaded but not checked
 create table ref_sector (
     sector_code  varchar2(30)  not null,
     sector_name  varchar2(300) not null,
@@ -68,13 +88,14 @@ create table stg_emission (
 -- neither. These are constraints, not checks: a row breaking them could not
 -- be interpreted at all.
 create table emission (
-    country_code    varchar2(3)  not null,
+    country_code    varchar2(5)  not null,
     pollutant_code  varchar2(20) not null,
     sector_code     varchar2(30) not null,
     year            number(4)    not null,
     value           number,
     notation_key    varchar2(2),
     constraint emission_pk primary key (country_code, pollutant_code, sector_code, year),
+    constraint emission_country_fk foreign key (country_code) references ref_country,
     constraint emission_pollutant_fk foreign key (pollutant_code) references ref_pollutant,
     constraint emission_sector_fk foreign key (sector_code) references ref_sector,
     constraint emission_key_fk foreign key (notation_key) references ref_notation_key,
@@ -83,7 +104,8 @@ create table emission (
         or (value is null and notation_key is not null))
 );
 
--- Staging rows the loader could not interpret, with the first reason found.
+-- Staging rows that were not loaded, with the first reason found: either
+-- the row could not be interpreted, or it is deliberately out of scope.
 create table load_reject (
     stg_row_id  number         not null,
     reason      varchar2(200)  not null,
@@ -130,7 +152,7 @@ create table qc_run (
 create table qc_finding (
     run_id          number        not null,
     check_id        varchar2(10)  not null,
-    country_code    varchar2(3)   not null,
+    country_code    varchar2(5)   not null,
     pollutant_code  varchar2(20)  not null,
     sector_code     varchar2(30)  not null,
     year            number(4)     not null,

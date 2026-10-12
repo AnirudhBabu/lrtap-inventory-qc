@@ -18,6 +18,9 @@ create or replace package ut_qc02_qc04_cell_values as
 
     --%test(QC04 reports a negative value and not zero)
     procedure qc04_reports_negative_only;
+
+    --%test(QC04 ignores rows that are not source categories, such as adjustments)
+    procedure qc04_ignores_non_source_rows;
 end ut_qc02_qc04_cell_values;
 /
 
@@ -74,6 +77,18 @@ create or replace package body ut_qc02_qc04_cell_values as
         ut.expect(ut_fixture.actual_cells('QC04_NEGATIVE_VALUE'))
           .to_equal(ut_fixture.expected_cells());
     end qc04_reports_negative_only;
+
+    -- Approved adjustments are subtracted from a total, so they are negative
+    -- by design (the 2026 EEA file has 47 such cells).
+    procedure qc04_ignores_non_source_rows is
+        n number;
+    begin
+        ut_fixture.add_sector('ADJ', 'OTHER');
+        ut_fixture.add_value('XA', 'NOX', 'ADJ', 2023, -5);
+
+        select count(*) into n from qc04_negative_value where sector_code = 'ADJ';
+        ut.expect(n).to_equal(0);
+    end qc04_ignores_non_source_rows;
 
 end ut_qc02_qc04_cell_values;
 /
