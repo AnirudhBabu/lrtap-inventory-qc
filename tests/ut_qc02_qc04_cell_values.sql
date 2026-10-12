@@ -13,6 +13,9 @@ create or replace package ut_qc02_qc04_cell_values as
     --%test(QC02 does not treat a small positive value as zero)
     procedure qc02_ignores_small_value;
 
+    --%test(QC02 ignores zeros in rows that are not source categories)
+    procedure qc02_ignores_non_source_rows;
+
     --%test(QC03 reports NE and no other notation key)
     procedure qc03_reports_only_ne;
 
@@ -63,6 +66,21 @@ create or replace package body ut_qc02_qc04_cell_values as
         select count(*) into n from qc02_zero_value where sector_code = 'S3';
         ut.expect(n).to_equal(0);
     end qc02_ignores_small_value;
+
+    -- A zero adjustment means no adjustment was made, and a zero total
+    -- follows from the rows beneath it. Neither is a reporting choice that a
+    -- notation key could explain.
+    procedure qc02_ignores_non_source_rows is
+        n number;
+    begin
+        ut_fixture.add_sector('ADJ', 'OTHER');
+        ut_fixture.add_sector('TOT', 'TOTAL');
+        ut_fixture.add_value('XA', 'NOX', 'ADJ', 2023, 0);
+        ut_fixture.add_value('XA', 'NOX', 'TOT', 2023, 0);
+
+        select count(*) into n from qc02_zero_value where sector_code in ('ADJ', 'TOT');
+        ut.expect(n).to_equal(0);
+    end qc02_ignores_non_source_rows;
 
     procedure qc03_reports_only_ne is
     begin

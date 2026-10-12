@@ -45,7 +45,7 @@ upper-cased, and this project uses its own pollutant codes.
 | Check | Findings | In short |
 |-------|---------:|----------|
 | QC01 Required cell missing | 0 | No reporting Party has an empty cell. |
-| QC02 Zero instead of a notation key | 112,469 | Concentrated: Türkiye reports 0 in 89.7 % of its numeric cells. |
+| QC02 Zero instead of a notation key | 84,949 | Concentrated: Türkiye reports 0 in 90.1 % of its numeric source cells. |
 | QC03 Not estimated (NE) | 365,261 | 245,039 of them in pollutants and years that must be reported. |
 | QC04 Negative emission | 2 | Two small negative values in one sector. |
 | QC05 Sectors ≠ national total | 121 | All PM10, all in six countries, all with the total above the sector sum. |
@@ -55,12 +55,20 @@ upper-cased, and this project uses its own pollutant codes.
 ### QC02 and QC03: zeros and gaps
 
 The Reporting Guidelines ask for a notation key, never a 0, where there is no
-emission (RG2022 para. 12). Zeros are rare in most countries and concentrated in
-two: Türkiye (77,716 zero cells, 89.7 % of its numeric cells) and Liechtenstein
-(8,470, 38.4 %). CEIP's stage 1 test flags a pollutant when more than 10 % of its
-cells are zero (CEIP-M2025 p. 14); 56 of the 820 country–pollutant combinations
-with numeric data meet that criterion, in seven countries (Liechtenstein 26,
-Türkiye 17, Austria 7, Norway 3, Luxembourg, Poland and Cyprus 1 each).
+emission (RG2022 para. 12). The check looks at source categories only: NFR
+sectors and memo items (see CHECKS.md, QC02). Zeros there are rare in most
+countries and concentrated in two: Türkiye (75,686 zero cells, 90.1 % of its
+numeric source cells) and Liechtenstein (7,280, 37.1 %). CEIP's stage 1 test
+flags a pollutant when more than 10 % of its cells are zero (CEIP-M2025 p. 14);
+42 of the 808 country–pollutant combinations with numeric data meet that
+criterion, all in these two countries (Liechtenstein 26, Türkiye 16).
+
+Counting every row instead, as a first version of this check did, adds 27,520
+zeros: 25,525 in `Adjustments` rows, where 0 means no adjustment was made,
+1,250 in national totals for compliance and 745 in national totals that are
+zero because everything beneath them is. It would also put five more countries
+over CEIP's 10 % line (Austria, Norway, Luxembourg, Poland and Cyprus) purely
+because of zero adjustments.
 
 `NE` (emissions occur but were not estimated) is a legitimate key that marks a
 known gap. 365,261 cells use it; 245,039 of these are in pollutants and years

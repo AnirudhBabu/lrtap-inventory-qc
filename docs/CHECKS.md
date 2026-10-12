@@ -86,8 +86,18 @@ was not obliged to fill. `NR` (not relevant) exists precisely for this case.
 notation key says *why* there is no number. CEIP stage 1 also flags pollutants
 where more than 10 % of cells are zero (CEIP-M2025 p. 14).
 
-**Rule.** `value = 0`. One finding per cell. The CEIP 10 % criterion is a share
-per country and pollutant, which docs/FINDINGS.md computes from these findings.
+**Rule.** `value = 0`, for NFR sectors and memo items only. One finding per
+cell. The CEIP 10 % criterion is a share per country and pollutant, which
+docs/FINDINGS.md computes from these findings.
+
+**Why only those rows.** As in QC04, the rows that are not source categories
+behave differently. A zero adjustment means no adjustment was made, and a
+national total of zero follows from the rows beneath it; neither is a choice
+that a notation key could explain. On the 2026 data these rows hold 27,520
+zeros (25,525 of them adjustments), enough to push five countries over CEIP's
+10 % line on adjustments alone. The Guidelines word the rule for the reporting
+tables as a whole, so this is a reading of the rule, made explicit here rather
+than hidden in the SQL.
 
 **Note.** CEIP counts any number below 0.005 as "0" because its tables are
 displayed at that precision. This project stores full precision and only flags

@@ -53,17 +53,22 @@ select r.country_code,
 
 ------------------------------------------------------------------------------
 -- QC02 Zero reported instead of a notation key
+-- Only source categories (NFR sectors and memo items) are checked. A zero
+-- adjustment means none was made, and a zero total follows from the rows
+-- beneath it; neither is a choice a notation key could explain.
 ------------------------------------------------------------------------------
 create or replace view qc02_zero_value as
-select country_code,
-       pollutant_code,
-       sector_code,
-       year,
-       value as observed,
+select e.country_code,
+       e.pollutant_code,
+       e.sector_code,
+       e.year,
+       e.value as observed,
        cast(null as number) as expected,
        'Value 0 reported; a notation key should say why there is no emission' as detail
-  from emission
- where value = 0;
+  from emission e
+  join ref_sector s on s.sector_code = e.sector_code
+ where s.role in ('SECTOR', 'MEMO')
+   and e.value = 0;
 
 ------------------------------------------------------------------------------
 -- QC03 Emissions reported as Not Estimated
